@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public class Simulation {
-  public static char nextBlockName = 'A';
   public static List<Block> free_list;
   public static List<Block> used_list;
 
@@ -26,9 +25,9 @@ public class Simulation {
     }
   }
 
-  private static void blockSplit(Block freeBlock, int req_size){
+  private static void blockSplit(Block freeBlock, int req_size, String name){
     if(freeBlock.getSize() > req_size){
-      Block newBlock = new Block(String.valueOf(nextBlockName++), freeBlock.getOffset(), req_size);
+      Block newBlock = new Block(name, freeBlock.getOffset(), req_size);
       freeBlock.setOffset(freeBlock.getOffset()+req_size);
       freeBlock.setSize(freeBlock.getSize()-req_size);
       used_list.add(newBlock);
@@ -51,6 +50,18 @@ public class Simulation {
     }
   }
 
+  private static void alloc_first(String name, int size){
+    for(int i=0; i<free_list.size(); i++){
+      if(size <= free_list.get(i).getSize()){
+        blockSplit(free_list.get(i), size, name);
+        return;
+      }
+    }
+    //If we reach here, none of the blocks are big enough to allocate memory of that size
+    System.err.println("Allocation Error! Not enough space!");
+    return;
+  }
+
   /*Block alloc(String name, int size) { //#4,#5,#6 on worksheet  }
   private Block alloc_first(String name, int size);
   void free(String name);
@@ -63,11 +74,14 @@ public class Simulation {
     used_list = new ArrayList<Block>();
     free_list = new ArrayList<Block>();
 
-    Block myB = new Block("hello", 0, 1);
-    Block myB1 = new Block("hello again", 1, 4);
-    Block myB2 = new Block("this is another block", 6, 1);
-    Block myB3 = new Block("this is another block", 7, 1);
-    Block myB4 = new Block("this is another block", 8, 1);
+    Block pool = new Block("pool", 0, 1000);
+    free_list.add(pool);
+
+    /*Block myB = new Block("zero", 0, 1);
+    Block myB1 = new Block("one", 1, 4);
+    Block myB2 = new Block("two", 6, 1);
+    Block myB3 = new Block("three", 7, 1);
+    Block myB4 = new Block("four", 8, 1);
 
     free_list.add(myB);
     free_list.add(myB1);
@@ -77,6 +91,10 @@ public class Simulation {
     print();
 
     compactFreeList();
+    */
+    alloc_first("new block", 10);
+    alloc_first("second new block", 25);
+    alloc_first("let's break this", 1000);
     print();
 
   /* #9 on worksheet (modified) */ }
