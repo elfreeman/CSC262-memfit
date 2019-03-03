@@ -1,5 +1,9 @@
 package edu.smith.cs.csc262.memfit;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -62,6 +66,21 @@ public class Simulation {
     return;
   }
 
+  private static void free(String name){
+    //loop through used_list to find the right block
+    Block block;
+    for(int i=0; i<used_list.size(); i++){
+      block = used_list.get(i);
+      if(block.getName().equals(name)){
+        //we found our block, now remove it from used and add to free
+        free_list.add(block);
+        used_list.remove(block);
+        compactFreeList();
+        return;
+      }
+    }
+  }
+
   /*Block alloc(String name, int size) { //#4,#5,#6 on worksheet  }
   private Block alloc_first(String name, int size);
   void free(String name);
@@ -70,32 +89,48 @@ public class Simulation {
 */
 
   public static void main(String[] args) {
-    //for now just some test statements
+    //initialize the lists
     used_list = new ArrayList<Block>();
     free_list = new ArrayList<Block>();
 
-    Block pool = new Block("pool", 0, 1000);
-    free_list.add(pool);
+    //now read in memory allocation instructions from user;
+    //assume correct format for input lines
+    String fileName = "/Users/elizabethfreeman/IdeaProjects/CSC262-memfit/input.txt";
+    List<String> lines;
+    try {
+      lines = Files.readAllLines(Paths.get(fileName));
+    } catch (IOException e) {
+      e.printStackTrace();
+      lines = null;
+    }
+    int lineCounter = 1;
+    for(String line: lines){
+      String[] words = line.split(" ");
+      if(words.length < 2){
+        //all valid lines will have at least 2 words, ignore lines with fewer args
+        continue;
+      }
+      String command = words[0];
+      switch(command){
+        case "pool":
+          Block pool = new Block(words[1], 0, Integer.valueOf(words[2]));
+          free_list.add(pool);
+          break;
+        case "alloc":
+          alloc_first(words[1], Integer.valueOf(words[2]));
+          break;
+        case "free":
+          free(words[1]);
+          break;
+        default:
+          System.err.println("Invalid command in text file line "+String.valueOf(lineCounter)+"\n"+line);
+          break;
+      }
+      lineCounter++;
+    }
 
-    /*Block myB = new Block("zero", 0, 1);
-    Block myB1 = new Block("one", 1, 4);
-    Block myB2 = new Block("two", 6, 1);
-    Block myB3 = new Block("three", 7, 1);
-    Block myB4 = new Block("four", 8, 1);
-
-    free_list.add(myB);
-    free_list.add(myB1);
-    free_list.add(myB2);
-    free_list.add(myB3);
-    free_list.add(myB4);
     print();
 
-    compactFreeList();
-    */
-    alloc_first("new block", 10);
-    alloc_first("second new block", 25);
-    alloc_first("let's break this", 1000);
-    print();
 
-  /* #9 on worksheet (modified) */ }
+    /* #9 on worksheet (modified) */ }
 }
